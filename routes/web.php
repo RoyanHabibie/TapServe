@@ -4,6 +4,7 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\CashierController;
 use App\Http\Controllers\KitchenController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\PublicOrderController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\MenuController;
@@ -32,6 +33,15 @@ Route::prefix('admin')->middleware(['auth', 'role:admin,owner'])->name('admin.')
     Route::resource('menus', MenuController::class)->except(['show']);
     Route::resource('tables', TableController::class)->except(['show']);
 });
+
+Route::get('/order/{token?}', [PublicOrderController::class, 'showMenu'])->name('public.menu');
+Route::post('/cart/add/{token?}', [PublicOrderController::class, 'addToCart'])->name('public.cart.add');
+Route::get('/cart/{token?}', [PublicOrderController::class, 'viewCart'])->name('public.cart');
+Route::post('/cart/update/{token?}', [PublicOrderController::class, 'updateCart'])->name('public.cart.update');
+Route::post('/cart/remove/{token?}', [PublicOrderController::class, 'removeFromCart'])->name('public.cart.remove');
+Route::get('/checkout/{token?}', [PublicOrderController::class, 'checkout'])->name('public.checkout');
+Route::post('/place-order/{token?}', [PublicOrderController::class, 'placeOrder'])->name('public.place.order');
+Route::get('/order-status/{order}', [PublicOrderController::class, 'orderStatus'])->name('public.order.status');
 
 
 require __DIR__ . '/auth.php';

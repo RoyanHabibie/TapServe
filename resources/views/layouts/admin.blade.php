@@ -9,6 +9,8 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <!-- DataTables Bootstrap 5 CSS -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
     @stack('styles')
 </head>
 
@@ -24,17 +26,17 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link text-white" href="#">
+                    <a class="nav-link text-white" href="{{ route('admin.menus.index') }}">
                         <i class="bi bi-egg-fried me-2"></i> Menu
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link text-white" href="#">
+                    <a class="nav-link text-white" href="{{ route('admin.categories.index') }}">
                         <i class="bi bi-tags me-2"></i> Kategori
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link text-white" href="#">
+                    <a class="nav-link text-white" href="{{ route('admin.tables.index') }}">
                         <i class="bi bi-table me-2"></i> Meja
                     </a>
                 </li>
@@ -87,6 +89,11 @@
 
     <!-- Bootstrap 5 JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- jQuery (diperlukan DataTables) -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <!-- DataTables JS -->
+    <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
     @stack('scripts')
 </body>
 

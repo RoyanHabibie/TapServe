@@ -28,7 +28,14 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
-        return redirect()->intended(route('dashboard', absolute: false));
+        $user = Auth::user();
+
+        return match ($user->role) {
+            'owner', 'admin' => redirect()->route('admin.dashboard'),
+            'cashier'        => redirect()->route('cashier.dashboard'),
+            'kitchen'        => redirect()->route('kitchen.dashboard'),
+            default          => redirect()->route('dashboard'),
+        };
     }
 
     /**
@@ -43,15 +50,5 @@ class AuthenticatedSessionController extends Controller
         $request->session()->regenerateToken();
 
         return redirect('/');
-    }
-
-    protected function authenticated(Request $request, $user): RedirectResponse
-    {
-        return match ($user->role) {
-            'owner', 'admin' => redirect()->route('admin.dashboard'),
-            'cashier' => redirect()->route('cashier.dashboard'),
-            'kitchen' => redirect()->route('kitchen.dashboard'),
-            default => redirect('/'),
-        };
     }
 }

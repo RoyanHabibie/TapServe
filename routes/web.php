@@ -1,5 +1,8 @@
 <?php
 
+use App\Http\Controllers\AdminController;
+use App\Http\Controllers\CashierController;
+use App\Http\Controllers\KitchenController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
@@ -16,10 +19,9 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-
-    Route::get('/admin/dashboard', fn() => 'Admin Dashboard')->name('admin.dashboard');
-    Route::get('/cashier/dashboard', fn() => 'Cashier Dashboard')->name('cashier.dashboard');
-    Route::get('/kitchen/dashboard', fn() => 'Kitchen Dashboard')->name('kitchen.dashboard');
+    Route::get('/admin/dashboard', [AdminController::class, 'index'])->middleware('role:admin,owner')->name('admin.dashboard');
+    Route::get('/cashier/dashboard', [CashierController::class, 'index'])->middleware('role:cashier')->name('cashier.dashboard');
+    Route::get('/kitchen/dashboard', [KitchenController::class, 'index'])->middleware('role:kitchen')->name('kitchen.dashboard');
 });
 
 

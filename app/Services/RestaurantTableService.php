@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\RestaurantTable;
 use Illuminate\Support\Str;
+use App\Services\ActivityLogService;
 
 class RestaurantTableService
 {
@@ -14,13 +15,22 @@ class RestaurantTableService
 
     public function store(int $shopId, array $data): RestaurantTable
     {
-        return RestaurantTable::create([
+        $table = RestaurantTable::create([
             'shop_id' => $shopId,
             'name' => $data['name'],
             'token' => Str::random(64),
             'capacity' => $data['capacity'],
             'status' => $data['status'] ?? 'available',
         ]);
+
+        // Activity log
+        app(ActivityLogService::class)->log(
+            'created',
+            "Restaurant Table '{$table->name}' ditambahkan.",
+            $table
+        );
+
+        return $table;
     }
 
     public function update(RestaurantTable $table, array $data): RestaurantTable
@@ -31,11 +41,25 @@ class RestaurantTableService
             'status' => $data['status'] ?? $table->status,
         ]);
 
+        // Activity log
+        app(ActivityLogService::class)->log(
+            'updated',
+            "Restaurant Table '{$table->name}' diubah.",
+            $table
+        );
+
         return $table;
     }
 
     public function delete(RestaurantTable $table): void
     {
+        // Activity log
+        app(ActivityLogService::class)->log(
+            'deleted',
+            "Restaurant Table '{$table->name}' dihapus.",
+            $table
+        );
+
         $table->delete();
     }
 }

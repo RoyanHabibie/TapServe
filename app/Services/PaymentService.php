@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Payment;
 use App\Models\TableSession;
 use Carbon\Carbon;
+use App\Services\ActivityLogService;
 
 class PaymentService
 {
@@ -50,6 +51,13 @@ class PaymentService
         // Update session: status ke paid, lalu langsung close
         $session->update(['status' => 'paid']);
         $this->sessionService->closeSession($session);
+
+        app(ActivityLogService::class)->log(
+            'payment_paid',
+            "Pembayaran session #{$session->id} sebesar {$amount} via {$method}.",
+            $payment,
+            ['method' => $method, 'amount' => $amount]
+        );
 
         return $payment;
     }

@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Menu;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
+use App\Services\ActivityLogService;
 
 class MenuService
 {
@@ -23,7 +24,7 @@ class MenuService
             $imagePath = $data['image']->store('menus', 'public');
         }
 
-        return Menu::create([
+        $menu = Menu::create([
             'shop_id' => $shopId,
             'category_id' => $data['category_id'],
             'name' => $data['name'],
@@ -34,6 +35,15 @@ class MenuService
             'is_available' => $data['is_available'] ?? true,
             'sort_order' => $data['sort_order'] ?? 0,
         ]);
+
+        // Activity log
+        app(ActivityLogService::class)->log(
+            'created',
+            "Menu '{$menu->name}' ditambahkan.",
+            $menu
+        );
+
+        return $menu;
     }
 
     public function update(Menu $menu, array $data): Menu
@@ -56,11 +66,25 @@ class MenuService
             'sort_order' => $data['sort_order'] ?? $menu->sort_order,
         ]);
 
+        // Activity log
+        app(ActivityLogService::class)->log(
+            'updated',
+            "Menu '{$menu->name}' diubah.",
+            $menu
+        );
+
         return $menu;
     }
 
     public function delete(Menu $menu): void
     {
+        // Activity log
+        app(ActivityLogService::class)->log(
+            'deleted',
+            "Menu '{$menu->name}' dihapus.",
+            $menu
+        );
+
         if ($menu->image) {
             Storage::disk('public')->delete($menu->image);
         }

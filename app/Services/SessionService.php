@@ -6,6 +6,7 @@ use App\Models\RestaurantTable;
 use App\Models\TableSession;
 use App\Models\Shop;
 use Carbon\Carbon;
+use App\Services\ActivityLogService;
 
 class SessionService
 {
@@ -67,6 +68,12 @@ class SessionService
             $session->table()->update(['status' => 'available']);
         }
 
+        app(ActivityLogService::class)->log(
+            'session_closed',
+            "Session #{$session->id} ditutup.",
+            $session
+        );
+
         return $session;
     }
 
@@ -83,6 +90,12 @@ class SessionService
         if ($session->table_id) {
             $session->table()->update(['status' => 'available']);
         }
+
+        app(ActivityLogService::class)->log(
+            'session_cancelled',
+            "Session #{$session->id} dibatalkan.",
+            $session
+        );
 
         return $session;
     }

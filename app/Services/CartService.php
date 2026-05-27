@@ -72,6 +72,11 @@ class CartService
         return $total;
     }
 
+    public function getTotalQuantity(): int
+    {
+        return array_sum(array_column($this->getCart(), 'quantity'));
+    }
+
     public function clear()
     {
         $this->session->forget('cart');

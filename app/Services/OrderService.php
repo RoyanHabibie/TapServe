@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\TableSession;
+use App\Services\ActivityLogService;
 
 class OrderService
 {
@@ -54,6 +55,12 @@ class OrderService
             ]);
         }
 
+        app(ActivityLogService::class)->log(
+            'order_created',
+            "Order #{$order->order_number} dibuat untuk session #{$session->id}.",
+            $order
+        );
+
         // Kosongkan cart
         $this->cartService->clear();
 
@@ -85,6 +92,13 @@ class OrderService
         }
 
         $order->update(['status' => $newStatus]);
+
+        app(ActivityLogService::class)->log(
+            'order_status_changed',
+            "Order #{$order->order_number} status berubah menjadi '{$newStatus}'.",
+            $order,
+            ['old_status' => $current, 'new_status' => $newStatus]
+        );
 
         return $order;
     }

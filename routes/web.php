@@ -25,8 +25,18 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     Route::get('/admin/dashboard', [AdminController::class, 'index'])->middleware('role:admin,owner')->name('admin.dashboard');
-    Route::get('/cashier/dashboard', [CashierController::class, 'index'])->middleware('role:cashier')->name('cashier.dashboard');
-    Route::get('/kitchen/dashboard', [KitchenController::class, 'index'])->middleware('role:kitchen')->name('kitchen.dashboard');
+    });
+
+// Kitchen routes (dilindungi role kitchen)
+Route::middleware(['auth', 'role:kitchen'])->group(function () {
+    Route::get('/kitchen/dashboard', [KitchenController::class, 'index'])->name('kitchen.dashboard');
+    Route::post('/kitchen/order/{order}/status', [KitchenController::class, 'updateStatus'])->name('kitchen.order.status');
+});
+
+// Cashier routes
+Route::middleware(['auth', 'role:cashier'])->group(function () {
+    Route::get('/cashier/dashboard', [CashierController::class, 'index'])->name('cashier.dashboard');
+    // Nanti payment route ditambahkan
 });
 
 Route::prefix('admin')->middleware(['auth', 'role:admin,owner'])->name('admin.')->group(function () {

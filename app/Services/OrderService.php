@@ -64,4 +64,28 @@ class OrderService
     {
         return 'ORD-' . strtoupper(uniqid()) . '-' . now()->format('His');
     }
+
+    /**
+     * Update status order dengan validasi urutan.
+     */
+    public function updateStatus(Order $order, string $newStatus): Order
+    {
+        $allowedTransitions = [
+            'pending' => ['processing', 'cancelled'],
+            'processing' => ['ready', 'cancelled'],
+            'ready' => ['completed', 'cancelled'],
+            'completed' => [],
+            'cancelled' => [],
+        ];
+
+        $current = $order->status;
+
+        if (!isset($allowedTransitions[$current]) || !in_array($newStatus, $allowedTransitions[$current])) {
+            throw new \Exception("Perubahan status dari {$current} ke {$newStatus} tidak diizinkan.");
+        }
+
+        $order->update(['status' => $newStatus]);
+
+        return $order;
+    }
 }

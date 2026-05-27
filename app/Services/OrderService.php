@@ -17,6 +17,17 @@ class OrderService
 
     public function placeOrder(TableSession $session, ?string $notes = null): Order
     {
+        // Cek apakah session bisa menerima order
+        if (!app(SessionService::class)->canAddOrder($session)) {
+            throw new \Exception('Session sudah tidak aktif. Tidak dapat menambah pesanan.');
+        }
+
+        $cart = $this->cartService->getCart();
+
+        if (empty($cart)) {
+            throw new \Exception('Keranjang kosong.');
+        }
+
         $cart = $this->cartService->getCart();
 
         if (empty($cart)) {

@@ -147,7 +147,17 @@ class PublicOrderController extends Controller
     {
         $shop = Shop::firstOrFail();
         $session = $this->sessionService->getOrCreateSession($token, $shop->id);
-        $order = $this->orderService->placeOrder($session, $request->notes);
+
+        try {
+            $order = $this->orderService->placeOrder($session, $request->notes);
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', $e->getMessage());
+        }
+
+        // Jika takeaway (instant payment), set session ke payment_pending
+        if ($session->isTakeaway()) {
+            $session->update(['status' => 'payment_pending']);
+        }
 
         return redirect()->route('public.order.status', ['order' => $order->id])
             ->with('success', 'Pesanan berhasil dibuat.');

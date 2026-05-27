@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\SessionController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\CashierController;
 use App\Http\Controllers\KitchenController;
@@ -43,5 +44,8 @@ Route::get('/checkout/{token?}', [PublicOrderController::class, 'checkout'])->na
 Route::post('/place-order/{token?}', [PublicOrderController::class, 'placeOrder'])->name('public.place.order');
 Route::get('/order-status/{order}', [PublicOrderController::class, 'orderStatus'])->name('public.order.status');
 
+Route::get('/sessions', [SessionController::class, 'index'])->name('admin.sessions.index');
+Route::get('/sessions/{id}/close', [SessionController::class, 'close'])->name('admin.sessions.close');
+Route::get('/sessions/{id}/cancel', [SessionController::class, 'cancel'])->name('admin.sessions.cancel');
 
 require __DIR__ . '/auth.php';

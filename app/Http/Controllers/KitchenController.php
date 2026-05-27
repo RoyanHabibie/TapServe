@@ -20,15 +20,7 @@ class KitchenController extends Controller
      */
     public function index()
     {
-        $shopId = auth()->user()->shop_id;
-
-        $orders = Order::with('orderItems.menu', 'session.table')
-            ->where('shop_id', $shopId)
-            ->whereNotIn('status', ['completed', 'cancelled'])
-            ->latest()
-            ->get();
-
-        return view('kitchen.dashboard', compact('orders'));
+        return view('kitchen.dashboard');
     }
 
     /**
@@ -47,5 +39,36 @@ class KitchenController extends Controller
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
         }
+    }
+
+    /**
+     * API untuk polling daftar order aktif (kitchen).
+     */
+    public function ajaxOrders()
+    {
+        $shopId = auth()->user()->shop_id;
+        $orders = Order::with('orderItems.menu', 'session.table')
+            ->where('shop_id', $shopId)
+            ->whereNotIn('status', ['completed', 'cancelled'])
+            ->latest()
+            ->get()
+            ->map(function ($order) {
+                return [
+                    'id' => $order->id,
+                    'order_number' => $order->order_number,
+                    'status' => $order->status,
+                    'table' => $order->session->table->name ?? 'Takeaway',
+                    'notes' => $order->notes,
+                    'items' => $order->orderItems->map(function ($item) {
+                        return [
+                            'name' => $item->menu->name,
+                            'quantity' => $item->quantity,
+                            'notes' => $item->notes,
+                        ];
+                    }),
+                ];
+            });
+
+        return response()->json($orders);
     }
 }

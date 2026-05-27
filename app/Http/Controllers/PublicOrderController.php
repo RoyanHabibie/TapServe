@@ -171,4 +171,25 @@ class PublicOrderController extends Controller
         $order = \App\Models\Order::with('orderItems.menu')->findOrFail($orderId);
         return view('public.order-status', compact('order'));
     }
+
+    /**
+     * API untuk polling status order oleh customer.
+     */
+    public function ajaxOrderStatus($orderId)
+    {
+        $order = \App\Models\Order::with('orderItems.menu')->findOrFail($orderId);
+        return response()->json([
+            'id' => $order->id,
+            'order_number' => $order->order_number,
+            'status' => $order->status,
+            'total_amount' => $order->total_amount,
+            'items' => $order->orderItems->map(function ($item) {
+                return [
+                    'name' => $item->menu->name,
+                    'quantity' => $item->quantity,
+                    'subtotal' => $item->subtotal,
+                ];
+            }),
+        ]);
+    }
 }

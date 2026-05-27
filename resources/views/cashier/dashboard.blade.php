@@ -39,7 +39,8 @@
                             $totalAll = $session->orders->where('status', '!=', 'cancelled')->sum('total_amount');
                         @endphp
                         <p class="fw-bold">Total: Rp {{ number_format($totalAll, 0, ',', '.') }}</p>
-                        <a href="#" class="btn btn-primary btn-sm w-100">Proses Pembayaran</a>
+                        <a href="{{ route('admin.payments.show', $session->id) }}"
+                            class="btn btn-primary btn-sm w-100">Proses Pembayaran</a>
                     </div>
                 </div>
             </div>

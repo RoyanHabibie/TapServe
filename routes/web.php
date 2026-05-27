@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\PaymentController;
 use App\Http\Controllers\Admin\SessionController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\CashierController;
@@ -25,12 +26,16 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     Route::get('/admin/dashboard', [AdminController::class, 'index'])->middleware('role:admin,owner')->name('admin.dashboard');
-    });
+});
 
 // Kitchen routes (dilindungi role kitchen)
 Route::middleware(['auth', 'role:kitchen'])->group(function () {
     Route::get('/kitchen/dashboard', [KitchenController::class, 'index'])->name('kitchen.dashboard');
     Route::post('/kitchen/order/{order}/status', [KitchenController::class, 'updateStatus'])->name('kitchen.order.status');
+    // AJAX order status untuk customer
+    Route::get('/order-status-ajax/{order}', [PublicOrderController::class, 'ajaxOrderStatus'])->name('public.order.status.ajax');
+    // AJAX orders untuk kitchen
+    Route::get('/kitchen/orders-ajax', [KitchenController::class, 'ajaxOrders'])->name('kitchen.orders.ajax');
 });
 
 // Cashier routes
@@ -43,6 +48,12 @@ Route::prefix('admin')->middleware(['auth', 'role:admin,owner'])->name('admin.')
     Route::resource('categories', CategoryController::class)->except(['show']);
     Route::resource('menus', MenuController::class)->except(['show']);
     Route::resource('tables', TableController::class)->except(['show']);
+});
+
+// Payment routes (bisa diakses cashier, admin, owner)
+Route::prefix('admin')->middleware(['auth', 'role:admin,owner,cashier'])->name('admin.')->group(function () {
+    Route::get('/payments/{session}', [PaymentController::class, 'show'])->name('payments.show');
+    Route::post('/payments/{session}', [PaymentController::class, 'store'])->name('payments.store');
 });
 
 Route::get('/order/{token?}', [PublicOrderController::class, 'showMenu'])->name('public.menu');

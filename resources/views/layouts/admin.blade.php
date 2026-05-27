@@ -26,6 +26,11 @@
                     </a>
                 </li>
                 <li class="nav-item">
+                    <a class="nav-link text-white" href="{{ route('admin.reports.index') }}">
+                        <i class="bi bi-graph-up me-2"></i> Laporan
+                    </a>
+                </li>
+                <li class="nav-item">
                     <a class="nav-link text-white" href="{{ route('admin.menus.index') }}">
                         <i class="bi bi-egg-fried me-2"></i> Menu
                     </a>

@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\MenuController;
 use App\Http\Controllers\Admin\TableController;
+use App\Http\Controllers\Admin\UserController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -53,6 +54,7 @@ Route::prefix('admin')->middleware(['auth', 'role:admin,owner'])->name('admin.')
     Route::resource('menus', MenuController::class)->except(['show']);
     Route::resource('tables', TableController::class)->except(['show']);
     Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
+    Route::resource('users', UserController::class)->except(['show']);
 });
 
 // Payment routes (bisa diakses cashier, admin, owner)
@@ -62,6 +64,9 @@ Route::prefix('admin')->middleware(['auth', 'role:admin,owner,cashier'])->name('
 });
 
 Route::get('/order/{token?}', [PublicOrderController::class, 'showMenu'])->name('public.menu');
+Route::get('/session/{token}', [PublicOrderController::class, 'sessionSummary'])->name('public.session');
+Route::get('/session/{token}/status', [PublicOrderController::class, 'ajaxSessionStatus'])->name('public.session.status');
+Route::post('/session/{token}/request-payment', [PublicOrderController::class, 'requestPayment'])->name('public.session.request-payment');
 Route::post('/cart/add/{token?}', [PublicOrderController::class, 'addToCart'])->name('public.cart.add');
 Route::get('/cart/{token?}', [PublicOrderController::class, 'viewCart'])->name('public.cart');
 Route::post('/cart/update/{token?}', [PublicOrderController::class, 'updateCart'])->name('public.cart.update');
@@ -70,8 +75,10 @@ Route::get('/checkout/{token?}', [PublicOrderController::class, 'checkout'])->na
 Route::post('/place-order/{token?}', [PublicOrderController::class, 'placeOrder'])->name('public.place.order');
 Route::get('/order-status/{order}', [PublicOrderController::class, 'orderStatus'])->name('public.order.status');
 
-Route::get('/sessions', [SessionController::class, 'index'])->name('admin.sessions.index');
-Route::get('/sessions/{id}/close', [SessionController::class, 'close'])->name('admin.sessions.close');
-Route::get('/sessions/{id}/cancel', [SessionController::class, 'cancel'])->name('admin.sessions.cancel');
+Route::prefix('admin')->middleware(['auth', 'role:admin,owner,cashier'])->name('admin.')->group(function () {
+    Route::get('/sessions', [SessionController::class, 'index'])->name('sessions.index');
+    Route::get('/sessions/{id}/close', [SessionController::class, 'close'])->name('sessions.close');
+    Route::get('/sessions/{id}/cancel', [SessionController::class, 'cancel'])->name('sessions.cancel');
+});
 
 require __DIR__ . '/auth.php';

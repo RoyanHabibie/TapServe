@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\OrderStatus;
+use App\Enums\SessionStatus;
 use App\Models\TableSession;
 
 class CashierController extends Controller
@@ -15,12 +17,12 @@ class CashierController extends Controller
 
         $sessions = TableSession::with([
             'orders' => function ($q) {
-                $q->whereNotIn('status', ['cancelled']);
+                $q->whereNotIn('status', [OrderStatus::Cancelled->value]);
             },
             'table'
         ])
             ->where('shop_id', $shopId)
-            ->whereIn('status', ['open', 'payment_pending'])
+            ->whereIn('status', [SessionStatus::Open->value, SessionStatus::PaymentPending->value])
             ->latest()
             ->get();
 

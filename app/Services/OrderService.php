@@ -2,10 +2,12 @@
 
 namespace App\Services;
 
+use App\Enums\OrderStatus;
+use App\Enums\SessionStatus;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\TableSession;
-use App\Services\ActivityLogService;
+use Illuminate\Support\Facades\DB;
 
 class OrderService
 {
@@ -18,7 +20,6 @@ class OrderService
 
     public function placeOrder(TableSession $session, ?string $notes = null): Order
     {
-        // Cek apakah session bisa menerima order
         if (!app(SessionService::class)->canAddOrder($session)) {
             throw new \Exception('Session sudah tidak aktif. Tidak dapat menambah pesanan.');
         }
@@ -29,31 +30,29 @@ class OrderService
             throw new \Exception('Keranjang kosong.');
         }
 
-        $cart = $this->cartService->getCart();
-
-        if (empty($cart)) {
-            throw new \Exception('Keranjang kosong.');
-        }
-
-        $order = Order::create([
-            'shop_id' => $session->shop_id,
-            'session_id' => $session->id,
-            'order_number' => $this->generateOrderNumber(),
-            'status' => 'pending',
-            'total_amount' => $this->cartService->getTotal(),
-            'notes' => $notes,
-        ]);
-
-        foreach ($cart as $item) {
-            OrderItem::create([
-                'order_id' => $order->id,
-                'menu_id' => $item['menu_id'],
-                'quantity' => $item['quantity'],
-                'price' => $item['price'],
-                'subtotal' => $item['price'] * $item['quantity'],
-                'notes' => $item['notes'] ?? null,
+        $order = DB::transaction(function () use ($session, $notes, $cart) {
+            $order = Order::create([
+                'shop_id'      => $session->shop_id,
+                'session_id'   => $session->id,
+                'order_number' => $this->generateOrderNumber(),
+                'status'       => OrderStatus::Pending->value,
+                'total_amount' => $this->cartService->getTotal(),
+                'notes'        => $notes,
             ]);
-        }
+
+            foreach ($cart as $item) {
+                OrderItem::create([
+                    'order_id' => $order->id,
+                    'menu_id'  => $item['menu_id'],
+                    'quantity' => $item['quantity'],
+                    'price'    => $item['price'],
+                    'subtotal' => $item['price'] * $item['quantity'],
+                    'notes'    => $item['notes'] ?? null,
+                ]);
+            }
+
+            return $order;
+        });
 
         app(ActivityLogService::class)->log(
             'order_created',
@@ -61,28 +60,19 @@ class OrderService
             $order
         );
 
-        // Kosongkan cart
         $this->cartService->clear();
 
         return $order;
     }
 
-    private function generateOrderNumber(): string
-    {
-        return 'ORD-' . strtoupper(uniqid()) . '-' . now()->format('His');
-    }
-
-    /**
-     * Update status order dengan validasi urutan.
-     */
     public function updateStatus(Order $order, string $newStatus): Order
     {
         $allowedTransitions = [
-            'pending' => ['processing', 'cancelled'],
-            'processing' => ['ready', 'cancelled'],
-            'ready' => ['completed', 'cancelled'],
-            'completed' => [],
-            'cancelled' => [],
+            OrderStatus::Pending->value    => [OrderStatus::Processing->value, OrderStatus::Cancelled->value],
+            OrderStatus::Processing->value => [OrderStatus::Ready->value, OrderStatus::Cancelled->value],
+            OrderStatus::Ready->value      => [OrderStatus::Completed->value, OrderStatus::Cancelled->value],
+            OrderStatus::Completed->value  => [],
+            OrderStatus::Cancelled->value  => [],
         ];
 
         $current = $order->status;
@@ -101,5 +91,10 @@ class OrderService
         );
 
         return $order;
+    }
+
+    private function generateOrderNumber(): string
+    {
+        return 'ORD-' . strtoupper(uniqid()) . '-' . now()->format('His');
     }
 }

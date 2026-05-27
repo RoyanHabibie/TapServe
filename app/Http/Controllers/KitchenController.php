@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\OrderStatus;
 use App\Models\Order;
 use App\Services\OrderService;
 use Illuminate\Http\Request;
@@ -28,6 +29,8 @@ class KitchenController extends Controller
      */
     public function updateStatus(Request $request, Order $order)
     {
+        abort_if($order->shop_id !== auth()->user()->shop_id, 403);
+
         $request->validate([
             'status' => 'required|in:processing,ready,completed,cancelled',
         ]);
@@ -35,7 +38,7 @@ class KitchenController extends Controller
         try {
             $this->orderService->updateStatus($order, $request->status);
 
-            return response()->json(['success' => true, 'newStatus' => $order->status]);
+            return response()->json(['success' => true, 'newStatus' => $order->fresh()->status]);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
         }
@@ -49,7 +52,7 @@ class KitchenController extends Controller
         $shopId = auth()->user()->shop_id;
         $orders = Order::with('orderItems.menu', 'session.table')
             ->where('shop_id', $shopId)
-            ->whereNotIn('status', ['completed', 'cancelled'])
+            ->whereNotIn('status', [OrderStatus::Completed->value, OrderStatus::Cancelled->value])
             ->latest()
             ->get()
             ->map(function ($order) {

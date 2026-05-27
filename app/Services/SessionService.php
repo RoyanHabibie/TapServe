@@ -2,11 +2,11 @@
 
 namespace App\Services;
 
+use App\Enums\SessionStatus;
+use App\Enums\TableStatus;
 use App\Models\RestaurantTable;
 use App\Models\TableSession;
-use App\Models\Shop;
 use Carbon\Carbon;
-use App\Services\ActivityLogService;
 
 class SessionService
 {
@@ -18,7 +18,7 @@ class SessionService
                 ->firstOrFail();
 
             $session = TableSession::where('table_id', $table->id)
-                ->whereIn('status', ['open', 'payment_pending'])
+                ->whereIn('status', [SessionStatus::Open->value, SessionStatus::PaymentPending->value])
                 ->where('shop_id', $shopId)
                 ->first();
 
@@ -26,46 +26,39 @@ class SessionService
                 return $session;
             }
 
-            // Buat session baru
             $session = TableSession::create([
-                'shop_id' => $shopId,
-                'table_id' => $table->id,
-                'order_type' => 'dine_in',
+                'shop_id'      => $shopId,
+                'table_id'     => $table->id,
+                'order_type'   => 'dine_in',
                 'payment_mode' => 'open_table',
-                'status' => 'open',
-                'opened_at' => Carbon::now(),
+                'status'       => SessionStatus::Open->value,
+                'opened_at'    => Carbon::now(),
             ]);
 
-            // Update status meja
-            $table->update(['status' => 'occupied']);
+            $table->update(['status' => TableStatus::Occupied->value]);
 
             return $session;
         }
 
-        // Takeaway
         return TableSession::create([
-            'shop_id' => $shopId,
-            'table_id' => null,
-            'order_type' => 'takeaway',
+            'shop_id'      => $shopId,
+            'table_id'     => null,
+            'order_type'   => 'takeaway',
             'payment_mode' => 'instant',
-            'status' => 'open',
-            'opened_at' => Carbon::now(),
+            'status'       => SessionStatus::Open->value,
+            'opened_at'    => Carbon::now(),
         ]);
     }
 
-    /**
-     * Menutup session (set status closed, catat closed_at)
-     */
     public function closeSession(TableSession $session): TableSession
     {
         $session->update([
-            'status' => 'closed',
+            'status'    => SessionStatus::Closed->value,
             'closed_at' => Carbon::now(),
         ]);
 
-        // Kembalikan status meja jika dine-in
         if ($session->table_id) {
-            $session->table()->update(['status' => 'available']);
+            $session->table()->update(['status' => TableStatus::Available->value]);
         }
 
         app(ActivityLogService::class)->log(
@@ -77,18 +70,15 @@ class SessionService
         return $session;
     }
 
-    /**
-     * Batalkan session
-     */
     public function cancelSession(TableSession $session): TableSession
     {
         $session->update([
-            'status' => 'cancelled',
+            'status'    => SessionStatus::Cancelled->value,
             'closed_at' => Carbon::now(),
         ]);
 
         if ($session->table_id) {
-            $session->table()->update(['status' => 'available']);
+            $session->table()->update(['status' => TableStatus::Available->value]);
         }
 
         app(ActivityLogService::class)->log(
@@ -100,11 +90,8 @@ class SessionService
         return $session;
     }
 
-    /**
-     * Cek apakah session masih bisa menerima order
-     */
     public function canAddOrder(TableSession $session): bool
     {
-        return in_array($session->status, ['open', 'payment_pending']);
+        return in_array($session->status, [SessionStatus::Open->value, SessionStatus::PaymentPending->value]);
     }
 }

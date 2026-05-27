@@ -3,13 +3,28 @@
 @section('title', 'Menu')
 
 @section('content')
-    @if ($token)
+    {{-- Banner pesanan aktif --}}
+    @if($activeSession)
+        <div class="alert alert-primary d-flex justify-content-between align-items-center mb-3">
+            <div>
+                <i class="bi bi-receipt-cutoff me-2"></i>
+                <strong>{{ $activeSession->orders->count() }} pesanan aktif</strong>
+                &mdash; Total: <strong>Rp {{ number_format($sessionTotal, 0, ',', '.') }}</strong>
+                @if($activeSession->status === 'payment_pending')
+                    <span class="badge bg-warning text-dark ms-2">Menunggu Kasir</span>
+                @endif
+            </div>
+            <a href="{{ route('public.session', ['token' => $token]) }}" class="btn btn-primary btn-sm">
+                <i class="bi bi-eye me-1"></i>Lihat
+            </a>
+        </div>
+    @elseif($token)
         <div class="alert alert-info">
-            Meja: Scan QR berhasil. Silakan pilih menu.
+            <i class="bi bi-qr-code me-2"></i>Meja berhasil di-scan. Silakan pilih menu.
         </div>
     @else
         <div class="alert alert-info">
-            Takeaway - Pesan untuk dibawa pulang.
+            <i class="bi bi-bag me-2"></i>Takeaway — Pesan untuk dibawa pulang.
         </div>
     @endif
 

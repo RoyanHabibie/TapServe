@@ -2,10 +2,12 @@
 
 namespace App\Services;
 
+use App\Enums\OrderStatus;
+use App\Enums\PaymentStatus;
+use App\Enums\SessionStatus;
 use App\Models\Payment;
 use App\Models\TableSession;
 use Carbon\Carbon;
-use App\Services\ActivityLogService;
 
 class PaymentService
 {
@@ -16,23 +18,14 @@ class PaymentService
         $this->sessionService = $sessionService;
     }
 
-    /**
-     * Proses pembayaran untuk suatu session.
-     *
-     * @param TableSession $session
-     * @param float $amount
-     * @param string $method  cash, qris, transfer, ewallet
-     * @return Payment
-     */
     public function process(TableSession $session, float $amount, string $method): Payment
     {
-        if ($session->status === 'closed' || $session->status === 'cancelled') {
+        if (in_array($session->status, [SessionStatus::Closed->value, SessionStatus::Cancelled->value])) {
             throw new \Exception('Session sudah tidak aktif.');
         }
 
-        // Hitung total pesanan yang belum dibatalkan
         $totalOrder = $session->orders()
-            ->where('status', '!=', 'cancelled')
+            ->where('status', '!=', OrderStatus::Cancelled->value)
             ->sum('total_amount');
 
         if ($amount < $totalOrder) {
@@ -40,16 +33,15 @@ class PaymentService
         }
 
         $payment = Payment::create([
-            'shop_id' => $session->shop_id,
+            'shop_id'    => $session->shop_id,
             'session_id' => $session->id,
-            'amount' => $amount,
-            'method' => $method,
-            'status' => 'paid',
-            'paid_at' => Carbon::now(),
+            'amount'     => $amount,
+            'method'     => $method,
+            'status'     => PaymentStatus::Paid->value,
+            'paid_at'    => Carbon::now(),
         ]);
 
-        // Update session: status ke paid, lalu langsung close
-        $session->update(['status' => 'paid']);
+        $session->update(['status' => SessionStatus::Paid->value]);
         $this->sessionService->closeSession($session);
 
         app(ActivityLogService::class)->log(

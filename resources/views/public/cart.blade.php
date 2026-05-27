@@ -105,26 +105,36 @@
 
             $('.btn-remove').click(function() {
                 var row = $(this).closest('tr');
-                if (confirm('Hapus item ini?')) {
-                    $.ajax({
-                        url: '{{ route('public.cart.remove', ['token' => $token]) }}',
-                        method: 'POST',
-                        data: {
-                            _token: '{{ csrf_token() }}',
-                            menu_id: row.data('menu-id')
-                        },
-                        success: function(response) {
-                            row.remove();
-                            $('#cartTotal').text('Rp ' + response.total);
-                            if (response.totalItems > 0) {
-                                $('#cartCount').text(response.totalItems).show();
-                            } else {
-                                $('#cartCount').hide();
-                                location.reload();
+                Swal.fire({
+                    title: 'Hapus item ini?',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Ya, hapus',
+                    cancelButtonText: 'Batal',
+                }).then(function(result) {
+                    if (result.isConfirmed) {
+                        $.ajax({
+                            url: '{{ route('public.cart.remove', ['token' => $token]) }}',
+                            method: 'POST',
+                            data: {
+                                _token: '{{ csrf_token() }}',
+                                menu_id: row.data('menu-id')
+                            },
+                            success: function(response) {
+                                row.remove();
+                                $('#cartTotal').text('Rp ' + response.total);
+                                if (response.totalItems > 0) {
+                                    $('#cartCount').text(response.totalItems).show();
+                                } else {
+                                    $('#cartCount').hide();
+                                    location.reload();
+                                }
                             }
-                        }
-                    });
-                }
+                        });
+                    }
+                });
             });
         });
     </script>

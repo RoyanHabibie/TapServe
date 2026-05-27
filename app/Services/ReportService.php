@@ -2,6 +2,9 @@
 
 namespace App\Services;
 
+use App\Enums\OrderStatus;
+use App\Enums\PaymentStatus;
+use App\Enums\SessionStatus;
 use App\Models\Order;
 use App\Models\Payment;
 use App\Models\TableSession;
@@ -26,19 +29,17 @@ class ReportService
 
         // Pendapatan hari ini (dari payment yang paid hari ini)
         $revenueToday = Payment::where('shop_id', $this->shopId)
-            ->where('status', 'paid')
+            ->where('status', PaymentStatus::Paid->value)
             ->whereDate('paid_at', $today)
             ->sum('amount');
 
-        // Total order hari ini (semua status selain cancelled)
         $ordersToday = Order::where('shop_id', $this->shopId)
             ->whereDate('created_at', $today)
-            ->where('status', '!=', 'cancelled')
+            ->where('status', '!=', OrderStatus::Cancelled->value)
             ->count();
 
-        // Sesi aktif
         $activeSessions = TableSession::where('shop_id', $this->shopId)
-            ->whereIn('status', ['open', 'payment_pending'])
+            ->whereIn('status', [SessionStatus::Open->value, SessionStatus::PaymentPending->value])
             ->count();
 
         // Menu terpopuler (top 5)
@@ -70,15 +71,14 @@ class ReportService
         // Laporan pendapatan: payment yang sudah paid
         $payments = Payment::with('session')
             ->where('shop_id', $this->shopId)
-            ->where('status', 'paid')
+            ->where('status', PaymentStatus::Paid->value)
             ->whereBetween('paid_at', [$start, $end])
             ->orderBy('paid_at', 'desc')
             ->get();
 
-        // Laporan pesanan: semua order (kecuali cancelled)
         $orders = Order::with(['session.table', 'orderItems'])
             ->where('shop_id', $this->shopId)
-            ->where('status', '!=', 'cancelled')
+            ->where('status', '!=', OrderStatus::Cancelled->value)
             ->whereBetween('created_at', [$start, $end])
             ->orderBy('created_at', 'desc')
             ->get();

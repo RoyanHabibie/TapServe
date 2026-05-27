@@ -7,6 +7,7 @@
     <title>@yield('title', 'TapServe')</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     <style>
         .menu-item {
             transition: 0.2s;
@@ -40,11 +41,18 @@
             <a class="navbar-brand" href="{{ route('public.menu', ['token' => $token ?? null]) }}">
                 {{ $shop->name ?? 'TapServe' }}
             </a>
-            <div class="ms-auto">
+            <div class="ms-auto d-flex gap-2">
+                @if(isset($token) && $token)
+                    <a href="{{ route('public.session', ['token' => $token]) }}"
+                        class="btn btn-outline-light btn-sm">
+                        <i class="bi bi-receipt"></i> Pesanan Saya
+                    </a>
+                @endif
                 <a href="{{ route('public.cart', ['token' => $token ?? null]) }}"
                     class="btn btn-outline-light position-relative">
                     <i class="bi bi-cart"></i> Keranjang
-                    <span class="cart-count" id="cartCount" style="{{ $totalItems ?? 0 > 0 ? '' : 'display:none;' }}">
+                    <span class="cart-count" id="cartCount"
+                        style="{{ ($totalItems ?? 0) > 0 ? '' : 'display:none;' }}">
                         {{ $totalItems ?? 0 }}
                     </span>
                 </a>
@@ -70,6 +78,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     @stack('scripts')
 </body>
 

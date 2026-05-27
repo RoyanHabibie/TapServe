@@ -39,18 +39,21 @@ class MenuController extends Controller
 
     public function edit(Menu $menu)
     {
+        abort_if($menu->shop_id !== auth()->user()->shop_id, 403);
         $categories = Category::where('shop_id', auth()->user()->shop_id)->get();
         return view('admin.menus.edit', compact('menu', 'categories'));
     }
 
     public function update(MenuUpdateRequest $request, Menu $menu)
     {
+        abort_if($menu->shop_id !== auth()->user()->shop_id, 403);
         $this->menuService->update($menu, $request->validated());
         return redirect()->route('admin.menus.index')->with('success', 'Menu berhasil diperbarui.');
     }
 
     public function destroy(Menu $menu)
     {
+        abort_if($menu->shop_id !== auth()->user()->shop_id, 403);
         $this->menuService->delete($menu);
         return redirect()->route('admin.menus.index')->with('success', 'Menu berhasil dihapus.');
     }

@@ -37,17 +37,20 @@ class TableController extends Controller
 
     public function edit(RestaurantTable $table)
     {
+        abort_if($table->shop_id !== auth()->user()->shop_id, 403);
         return view('admin.tables.edit', compact('table'));
     }
 
     public function update(TableUpdateRequest $request, RestaurantTable $table)
     {
+        abort_if($table->shop_id !== auth()->user()->shop_id, 403);
         $this->tableService->update($table, $request->validated());
         return redirect()->route('admin.tables.index')->with('success', 'Meja berhasil diperbarui.');
     }
 
     public function destroy(RestaurantTable $table)
     {
+        abort_if($table->shop_id !== auth()->user()->shop_id, 403);
         $this->tableService->delete($table);
         return redirect()->route('admin.tables.index')->with('success', 'Meja berhasil dihapus.');
     }

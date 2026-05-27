@@ -10,6 +10,7 @@ class Shop extends Model
         'name',
         'slug',
         'logo',
+        'qris_image',
         'address',
         'phone',
         'email',

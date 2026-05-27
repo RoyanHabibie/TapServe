@@ -121,13 +121,41 @@
                 </a>
             </div>
         @elseif($session->status === 'payment_pending')
-            <div class="card text-center py-4 mb-3" style="background:#fefce8;border:1px solid #fde68a;border-radius:14px;">
-                <div class="card-body">
-                    <div class="mb-2">
-                        <i class="bi bi-hourglass-split" style="font-size:2rem;color:#d97706;"></i>
+            {{-- ── QRIS self-payment ── --}}
+            @if($shop->qris_image)
+                <div class="card mb-3 text-center"
+                    style="border-radius:14px;border:1px solid #e0e7ff;">
+                    <div class="card-header bg-white py-3 px-4 text-start"
+                        style="border-radius:14px 14px 0 0;border-bottom:1px solid #f1f5f9;">
+                        <span class="fw-600" style="font-weight:600;font-size:.875rem;color:#1e293b;">
+                            <i class="bi bi-qr-code-scan me-2" style="color:#7c3aed;"></i>Bayar Mandiri via QRIS
+                        </span>
                     </div>
+                    <div class="card-body px-4 py-4">
+                        <img src="{{ asset('storage/' . $shop->qris_image) }}"
+                            alt="QRIS"
+                            style="max-width:240px;width:100%;border-radius:10px;
+                                   box-shadow:0 4px 20px rgba(0,0,0,.1);">
+                        <p class="mt-3 mb-1 fw-600" style="font-weight:600;font-size:.875rem;">
+                            Scan QR di atas untuk membayar
+                        </p>
+                        <p class="text-muted small mb-0">
+                            Total:
+                            <strong style="color:#1e293b;">
+                                Rp {{ number_format($total, 0, ',', '.') }}
+                            </strong>
+                        </p>
+                    </div>
+                </div>
+            @endif
+
+            <div class="card text-center py-4 mb-3"
+                style="background:#fefce8;border:1px solid #fde68a;border-radius:14px;">
+                <div class="card-body">
+                    <i class="bi bi-hourglass-split mb-2 d-block"
+                        style="font-size:1.75rem;color:#d97706;"></i>
                     <div class="fw-600" style="font-weight:600;color:#92400e;" id="waitingAlert">
-                        Menunggu kasir memproses pembayaran...
+                        Menunggu kasir mengkonfirmasi pembayaran...
                     </div>
                     <div class="text-muted small mt-1">Halaman ini akan otomatis terupdate.</div>
                 </div>

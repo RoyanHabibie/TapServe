@@ -3,69 +3,112 @@
 @section('title', 'Meja')
 
 @section('content')
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h3>Daftar Meja</h3>
-        <a href="{{ route('admin.tables.create') }}" class="btn btn-primary"><i class="bi bi-plus-circle"></i> Tambah Meja</a>
-    </div>
 
-    @if (session('success'))
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            {{ session('success') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="fw-700 mb-1" style="font-weight:700;">Daftar Meja</h4>
+            <p class="text-muted small mb-0">{{ $tables->count() }} meja terdaftar</p>
         </div>
-    @endif
+        <div class="d-flex gap-2">
+            <a href="{{ route('admin.tables.qrcodes') }}" class="btn btn-outline-secondary" target="_blank">
+                <i class="bi bi-qr-code me-1"></i>Cetak Semua QR
+            </a>
+            <a href="{{ route('admin.tables.create') }}" class="btn btn-primary">
+                <i class="bi bi-plus-lg me-1"></i>Tambah Meja
+            </a>
+        </div>
+    </div>
 
     <div class="card">
-        <div class="card-body">
-            <table class="table table-striped" id="tablesTable">
-                <thead>
-                    <tr>
-                        <th>No</th>
-                        <th>Nama</th>
-                        <th>Kapasitas</th>
-                        <th>Status</th>
-                        <th>Token (QR)</th>
-                        <th>Aksi</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach ($tables as $index => $table)
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0" id="tablesTable">
+                    <thead>
                         <tr>
-                            <td>{{ $index + 1 }}</td>
-                            <td>{{ $table->name }}</td>
-                            <td>{{ $table->capacity }} orang</td>
-                            <td>
-                                <span
-                                    class="badge bg-{{ $table->status == 'available' ? 'success' : ($table->status == 'occupied' ? 'warning' : 'secondary') }}">
-                                    {{ ucfirst($table->status) }}
-                                </span>
-                            </td>
-                            <td><small class="text-monospace">{{ substr($table->token, 0, 20) }}...</small></td>
-                            <td>
-                                <a href="{{ route('admin.tables.edit', $table->id) }}" class="btn btn-sm btn-warning"><i
-                                        class="bi bi-pencil"></i></a>
-                                <form action="{{ route('admin.tables.destroy', $table->id) }}" method="POST"
-                                    class="d-inline delete-form">
-                                    @csrf @method('DELETE')
-                                    <button type="submit" class="btn btn-sm btn-danger"><i
-                                            class="bi bi-trash"></i></button>
-                                </form>
-                            </td>
+                            <th>#</th>
+                            <th>Nama Meja</th>
+                            <th>Kapasitas</th>
+                            <th>Status</th>
+                            <th>Aksi</th>
                         </tr>
-                    @endforeach
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        @foreach ($tables as $index => $table)
+                            @php
+                                $statusBg = match($table->status) {
+                                    'available' => ['#dcfce7','#166534'],
+                                    'occupied'  => ['#fef3c7','#92400e'],
+                                    default     => ['#f1f5f9','#475569'],
+                                };
+                                $statusLabel = match($table->status) {
+                                    'available' => 'Tersedia',
+                                    'occupied'  => 'Terisi',
+                                    default     => 'Nonaktif',
+                                };
+                            @endphp
+                            <tr>
+                                <td class="text-muted">{{ $index + 1 }}</td>
+                                <td class="fw-600" style="font-weight:600;">{{ $table->name }}</td>
+                                <td>{{ $table->capacity }} orang</td>
+                                <td>
+                                    <span class="badge rounded-pill"
+                                        style="background:{{ $statusBg[0] }};color:{{ $statusBg[1] }};">
+                                        {{ $statusLabel }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="d-flex gap-1">
+                                        <a href="{{ route('admin.tables.qrcode', $table->id) }}"
+                                            class="btn btn-sm btn-outline-primary"
+                                            title="Cetak QR Meja" target="_blank">
+                                            <i class="bi bi-qr-code"></i>
+                                        </a>
+                                        <a href="{{ route('admin.tables.edit', $table->id) }}"
+                                            class="btn btn-sm btn-outline-warning"
+                                            title="Edit">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <form action="{{ route('admin.tables.destroy', $table->id) }}"
+                                            method="POST" class="d-inline delete-form">
+                                            @csrf @method('DELETE')
+                                            <button type="submit" class="btn btn-sm btn-outline-danger"
+                                                title="Hapus">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
+
 @endsection
 
 @push('scripts')
-    <script>
-        $(document).ready(function() {
-            $('#tablesTable').DataTable();
-            $('.delete-form').on('submit', function(e) {
-                if (!confirm('Yakin ingin menghapus?')) e.preventDefault();
+<script>
+    $(document).ready(function () {
+        $('#tablesTable').DataTable({ order: [[0, 'asc']] });
+
+        $(document).on('submit', '.delete-form', function (e) {
+            e.preventDefault();
+            var form = this;
+            Swal.fire({
+                title: 'Hapus meja ini?',
+                text: 'Data yang dihapus tidak dapat dikembalikan.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Ya, hapus',
+                cancelButtonText: 'Batal',
+            }).then(function (result) {
+                if (result.isConfirmed) form.submit();
             });
         });
-    </script>
+    });
+</script>
 @endpush

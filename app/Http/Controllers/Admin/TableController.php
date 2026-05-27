@@ -54,4 +54,17 @@ class TableController extends Controller
         $this->tableService->delete($table);
         return redirect()->route('admin.tables.index')->with('success', 'Meja berhasil dihapus.');
     }
+
+    public function printQr(RestaurantTable $table)
+    {
+        abort_if($table->shop_id !== auth()->user()->shop_id, 403);
+        $url = route('public.menu', ['token' => $table->token]);
+        return view('admin.tables.qrcode', compact('table', 'url'));
+    }
+
+    public function printAllQr()
+    {
+        $tables = $this->tableService->getAll(auth()->user()->shop_id);
+        return view('admin.tables.qrcodes', compact('tables'));
+    }
 }

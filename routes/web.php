@@ -11,6 +11,7 @@ use App\Http\Controllers\PublicOrderController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\MenuController;
+use App\Http\Controllers\Admin\QrisController;
 use App\Http\Controllers\Admin\TableController;
 use App\Http\Controllers\Admin\UserController;
 
@@ -52,9 +53,14 @@ Route::middleware(['auth', 'role:cashier'])->group(function () {
 Route::prefix('admin')->middleware(['auth', 'role:admin,owner'])->name('admin.')->group(function () {
     Route::resource('categories', CategoryController::class)->except(['show']);
     Route::resource('menus', MenuController::class)->except(['show']);
+    Route::get('/tables/qrcodes', [TableController::class, 'printAllQr'])->name('tables.qrcodes');
     Route::resource('tables', TableController::class)->except(['show']);
+    Route::get('/tables/{table}/qrcode', [TableController::class, 'printQr'])->name('tables.qrcode');
     Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
     Route::resource('users', UserController::class)->except(['show']);
+    Route::get('/settings/qris', [QrisController::class, 'show'])->name('settings.qris');
+    Route::post('/settings/qris', [QrisController::class, 'update'])->name('settings.qris.update');
+    Route::delete('/settings/qris', [QrisController::class, 'destroy'])->name('settings.qris.destroy');
 });
 
 // Payment routes (bisa diakses cashier, admin, owner)

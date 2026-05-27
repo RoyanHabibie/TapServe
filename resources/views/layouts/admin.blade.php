@@ -157,50 +157,86 @@
     <div class="sb-overlay" id="sbOverlay" onclick="closeSidebar()"></div>
 
     {{-- ── Sidebar ── --}}
+    @php
+        $role = Auth::user()->role;
+        $homeRoute = match($role) {
+            'cashier' => route('cashier.dashboard'),
+            'kitchen' => route('kitchen.dashboard'),
+            default   => route('admin.dashboard'),
+        };
+    @endphp
+
     <div id="sidebar">
-        <a href="{{ route('admin.dashboard') }}" class="sb-brand">
+        <a href="{{ $homeRoute }}" class="sb-brand">
             <i class="bi bi-cup-hot-fill" style="color:#3b82f6;"></i>
             <span>Tap</span>Serve
         </a>
 
         <nav class="flex-grow-1 py-2" style="overflow-y:auto;">
-            <div class="sb-section-label">Utama</div>
-            <a href="{{ route('admin.dashboard') }}"
-                class="sb-nav-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
-                <i class="bi bi-speedometer2"></i> Dashboard
-            </a>
-            <a href="{{ route('admin.reports.index') }}"
-                class="sb-nav-link {{ request()->routeIs('admin.reports.*') ? 'active' : '' }}">
-                <i class="bi bi-bar-chart-line"></i> Laporan
-            </a>
 
-            <div class="sb-section-label mt-2">Katalog</div>
-            <a href="{{ route('admin.menus.index') }}"
-                class="sb-nav-link {{ request()->routeIs('admin.menus.*') ? 'active' : '' }}">
-                <i class="bi bi-egg-fried"></i> Menu
-            </a>
-            <a href="{{ route('admin.categories.index') }}"
-                class="sb-nav-link {{ request()->routeIs('admin.categories.*') ? 'active' : '' }}">
-                <i class="bi bi-tags"></i> Kategori
-            </a>
-            <a href="{{ route('admin.tables.index') }}"
-                class="sb-nav-link {{ request()->routeIs('admin.tables.*') ? 'active' : '' }}">
-                <i class="bi bi-grid-3x3"></i> Meja
-            </a>
+            {{-- ── Owner & Admin ── --}}
+            @if(in_array($role, ['owner', 'admin']))
+                <div class="sb-section-label">Utama</div>
+                <a href="{{ route('admin.dashboard') }}"
+                    class="sb-nav-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
+                    <i class="bi bi-speedometer2"></i> Dashboard
+                </a>
+                <a href="{{ route('admin.reports.index') }}"
+                    class="sb-nav-link {{ request()->routeIs('admin.reports.*') ? 'active' : '' }}">
+                    <i class="bi bi-bar-chart-line"></i> Laporan
+                </a>
 
-            <div class="sb-section-label mt-2">Operasional</div>
-            <a href="{{ route('admin.sessions.index') }}"
-                class="sb-nav-link {{ request()->routeIs('admin.sessions.*') ? 'active' : '' }}">
-                <i class="bi bi-receipt-cutoff"></i> Sesi Meja
-            </a>
+                <div class="sb-section-label mt-2">Katalog</div>
+                <a href="{{ route('admin.menus.index') }}"
+                    class="sb-nav-link {{ request()->routeIs('admin.menus.*') ? 'active' : '' }}">
+                    <i class="bi bi-egg-fried"></i> Menu
+                </a>
+                <a href="{{ route('admin.categories.index') }}"
+                    class="sb-nav-link {{ request()->routeIs('admin.categories.*') ? 'active' : '' }}">
+                    <i class="bi bi-tags"></i> Kategori
+                </a>
+                <a href="{{ route('admin.tables.index') }}"
+                    class="sb-nav-link {{ request()->routeIs('admin.tables.*') ? 'active' : '' }}">
+                    <i class="bi bi-grid-3x3"></i> Meja
+                </a>
 
-            @if(auth()->user()->role === 'admin' || auth()->user()->role === 'owner')
-            <div class="sb-section-label mt-2">Pengaturan</div>
-            <a href="{{ route('admin.users.index') }}"
-                class="sb-nav-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}">
-                <i class="bi bi-people"></i> Kelola User
-            </a>
+                <div class="sb-section-label mt-2">Operasional</div>
+                <a href="{{ route('admin.sessions.index') }}"
+                    class="sb-nav-link {{ request()->routeIs('admin.sessions.*') ? 'active' : '' }}">
+                    <i class="bi bi-receipt-cutoff"></i> Sesi Meja
+                </a>
+
+                <div class="sb-section-label mt-2">Pengaturan</div>
+                <a href="{{ route('admin.users.index') }}"
+                    class="sb-nav-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}">
+                    <i class="bi bi-people"></i> Kelola User
+                </a>
+                <a href="{{ route('admin.settings.qris') }}"
+                    class="sb-nav-link {{ request()->routeIs('admin.settings.qris*') ? 'active' : '' }}">
+                    <i class="bi bi-qr-code-scan"></i> QRIS
+                </a>
+
+            {{-- ── Cashier ── --}}
+            @elseif($role === 'cashier')
+                <div class="sb-section-label">Kasir</div>
+                <a href="{{ route('cashier.dashboard') }}"
+                    class="sb-nav-link {{ request()->routeIs('cashier.dashboard') ? 'active' : '' }}">
+                    <i class="bi bi-cash-register"></i> Dashboard Kasir
+                </a>
+                <a href="{{ route('admin.sessions.index') }}"
+                    class="sb-nav-link {{ request()->routeIs('admin.sessions.*') ? 'active' : '' }}">
+                    <i class="bi bi-receipt-cutoff"></i> Sesi Meja
+                </a>
+
+            {{-- ── Kitchen ── --}}
+            @elseif($role === 'kitchen')
+                <div class="sb-section-label">Dapur</div>
+                <a href="{{ route('kitchen.dashboard') }}"
+                    class="sb-nav-link {{ request()->routeIs('kitchen.dashboard') ? 'active' : '' }}">
+                    <i class="bi bi-fire"></i> Pesanan Masuk
+                </a>
             @endif
+
         </nav>
 
         <div class="sb-footer">

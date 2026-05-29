@@ -42,12 +42,13 @@ class OrderService
 
             foreach ($cart as $item) {
                 OrderItem::create([
-                    'order_id' => $order->id,
-                    'menu_id'  => $item['menu_id'],
-                    'quantity' => $item['quantity'],
-                    'price'    => $item['price'],
-                    'subtotal' => $item['price'] * $item['quantity'],
-                    'notes'    => $item['notes'] ?? null,
+                    'order_id'   => $order->id,
+                    'menu_id'    => $item['menu_id'],
+                    'quantity'   => $item['quantity'],
+                    'price'      => $item['price'],
+                    'subtotal'   => $item['price'] * $item['quantity'],
+                    'notes'      => $item['notes'] ?? null,
+                    'order_type' => $item['order_type'] ?? 'dine_in',
                 ]);
             }
 

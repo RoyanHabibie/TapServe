@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\PaymentController;
+use App\Http\Controllers\Admin\PaymentMethodController;
 use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Admin\SessionController;
 use App\Http\Controllers\AdminController;
@@ -12,6 +13,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\MenuController;
 use App\Http\Controllers\Admin\QrisController;
+use App\Http\Controllers\Admin\ShopController;
 use App\Http\Controllers\Admin\TableController;
 use App\Http\Controllers\Admin\UserController;
 
@@ -58,15 +60,21 @@ Route::prefix('admin')->middleware(['auth', 'role:admin,owner'])->name('admin.')
     Route::get('/tables/{table}/qrcode', [TableController::class, 'printQr'])->name('tables.qrcode');
     Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
     Route::resource('users', UserController::class)->except(['show']);
+    Route::get('/settings/shop', [ShopController::class, 'show'])->name('settings.shop');
+    Route::post('/settings/shop', [ShopController::class, 'update'])->name('settings.shop.update');
+    Route::delete('/settings/shop/logo', [ShopController::class, 'destroyLogo'])->name('settings.shop.logo.destroy');
     Route::get('/settings/qris', [QrisController::class, 'show'])->name('settings.qris');
     Route::post('/settings/qris', [QrisController::class, 'update'])->name('settings.qris.update');
     Route::delete('/settings/qris', [QrisController::class, 'destroy'])->name('settings.qris.destroy');
+    Route::resource('payment-methods', PaymentMethodController::class)->except(['show']);
+    Route::post('/payment-methods/{paymentMethod}/toggle', [PaymentMethodController::class, 'toggle'])->name('payment-methods.toggle');
 });
 
 // Payment routes (bisa diakses cashier, admin, owner)
 Route::prefix('admin')->middleware(['auth', 'role:admin,owner,cashier'])->name('admin.')->group(function () {
     Route::get('/payments/{session}', [PaymentController::class, 'show'])->name('payments.show');
     Route::post('/payments/{session}', [PaymentController::class, 'store'])->name('payments.store');
+    Route::post('/payments/{session}/manual-order', [PaymentController::class, 'addManualOrder'])->name('payments.manual-order');
 });
 
 Route::get('/order/{token?}', [PublicOrderController::class, 'showMenu'])->name('public.menu');
@@ -77,6 +85,7 @@ Route::post('/cart/add/{token?}', [PublicOrderController::class, 'addToCart'])->
 Route::get('/cart/{token?}', [PublicOrderController::class, 'viewCart'])->name('public.cart');
 Route::post('/cart/update/{token?}', [PublicOrderController::class, 'updateCart'])->name('public.cart.update');
 Route::post('/cart/remove/{token?}', [PublicOrderController::class, 'removeFromCart'])->name('public.cart.remove');
+Route::post('/cart/item-type/{token?}', [PublicOrderController::class, 'updateCartItemType'])->name('public.cart.item-type');
 Route::get('/checkout/{token?}', [PublicOrderController::class, 'checkout'])->name('public.checkout');
 Route::post('/place-order/{token?}', [PublicOrderController::class, 'placeOrder'])->name('public.place.order');
 Route::get('/order-status/{order}', [PublicOrderController::class, 'orderStatus'])->name('public.order.status');

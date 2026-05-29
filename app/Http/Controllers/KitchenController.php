@@ -56,19 +56,27 @@ class KitchenController extends Controller
             ->latest()
             ->get()
             ->map(function ($order) {
+                $items = $order->orderItems->map(function ($item) {
+                    return [
+                        'name'       => $item->menu->name,
+                        'quantity'   => $item->quantity,
+                        'notes'      => $item->notes,
+                        'order_type' => $item->order_type ?? 'dine_in',
+                    ];
+                });
+
+                $types = $items->pluck('order_type')->unique()->values();
+                $typeSummary = $types->count() > 1 ? 'mixed'
+                    : ($types->first() === 'takeaway' ? 'takeaway' : 'dine_in');
+
                 return [
-                    'id' => $order->id,
+                    'id'           => $order->id,
                     'order_number' => $order->order_number,
-                    'status' => $order->status,
-                    'table' => $order->session->table->name ?? 'Takeaway',
-                    'notes' => $order->notes,
-                    'items' => $order->orderItems->map(function ($item) {
-                        return [
-                            'name' => $item->menu->name,
-                            'quantity' => $item->quantity,
-                            'notes' => $item->notes,
-                        ];
-                    }),
+                    'status'       => $order->status,
+                    'table'        => $order->session->table->name ?? 'Takeaway',
+                    'notes'        => $order->notes,
+                    'type_summary' => $typeSummary,
+                    'items'        => $items,
                 ];
             });
 

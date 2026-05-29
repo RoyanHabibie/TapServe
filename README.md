@@ -1,569 +1,229 @@
 # TapServe
 
-Smart QR Ordering & Table Management System
+**Smart QR Ordering & Table Management System**
 
-TapServe adalah sistem pemesanan menu berbasis QR Code untuk cafe/restoran dengan konsep **Open Table + Instant Payment**, dibangun menggunakan Laravel 12 dan MySQL.
-
-
-Project ditujukan sebagai **MVP yang siap dipakai UMKM**, namun memiliki arsitektur yang cukup fleksibel untuk dikembangkan menjadi produk SaaS multi-tenant.
-
-Target:
-MVP → Digunakan UMKM → Produk SaaS
+TapServe adalah sistem pemesanan berbasis QR Code untuk cafe dan restoran. Pelanggan cukup scan QR di meja, pilih menu, pesan, dan bayar — tanpa antre kasir. Dibangun dengan Laravel 12 dan siap dipakai oleh UMKM F&B.
 
 ---
 
-# 1. Tujuan Project
+## Fitur Utama
 
-Membangun sistem yang memungkinkan pelanggan:
+### Pelanggan (tanpa login)
 
-- Scan QR di meja
-- Melihat menu
-- Memesan makanan/minuman
-- Menambah pesanan berkali-kali
-- Membayar langsung atau nanti
-- Menutup transaksi sendiri tanpa antre kasir
-
-Serta mendukung operasional:
-
-- Dashboard kasir
-- Dashboard dapur
-- Status order realtime
-- Manajemen menu
-- Manajemen meja
-- Laporan sederhana
-
----
-
-# 2. Scope MVP (LOCKED)
-
-## Customer
-
-Tanpa login.
-
-Fitur:
-
-- Scan QR meja
-- Lihat menu
-- Tambah ke cart
-- Checkout
-- Tambah pesanan lagi
-- Lihat status pesanan
-- Bayar sekarang
-- Bayar nanti
+- Scan QR code di meja → langsung masuk ke menu
+- Lihat menu dengan foto, deskripsi, harga, dan kategori
+- Tambah item ke cart, ubah jumlah, atau hapus
+- Pilih tipe per item: **Dine In** atau **Bawa Pulang (Takeaway)**
+- Bulk-toggle semua item sekaligus ke Dine In / Takeaway
+- Checkout dan buat pesanan
+- Tambah pesanan lagi di sesi yang sama (Open Table)
+- Pantau status pesanan secara realtime (AJAX polling)
+- Bayar sekarang atau bayar nanti
+- Self-payment via QRIS (scan mandiri, tanpa kasir)
 - Tutup transaksi sendiri
 
----
+### Kasir
 
-## Admin / Owner
+- Dashboard sesi meja aktif dengan detail pesanan per sesi
+- Lihat item pesanan beserta status Dine In / Takeaway per item
+- Tambah pesanan manual (misal: pelanggan ambil item tanpa input sendiri)
+- Proses pembayaran dengan berbagai metode (sesuai konfigurasi)
+- Kalkulasi kembalian otomatis untuk pembayaran tunai
+- Close session setelah pembayaran dikonfirmasi
 
-Fitur:
+### Dapur / Kitchen
 
-- Login
-- CRUD menu
-- CRUD kategori
-- CRUD meja
-- Kelola user
-- Monitoring order
-- Laporan
+- Dashboard realtime semua pesanan aktif
+- Status per pesanan: Pending → Processing → Ready → Completed
+- Badge tipe order per item (Dine In / Bawa Pulang)
+- Ringkasan tipe per pesanan (Dine In / Bawa Pulang / Campuran)
+- AJAX polling otomatis, tidak perlu refresh
 
----
+### Admin / Owner
 
-## Kasir
+**Menu & Katalog**
+- CRUD kategori menu
+- CRUD menu dengan upload gambar, harga, dan ketersediaan
 
-Fitur:
+**Meja & Sesi**
+- CRUD meja dan cetak QR code (satuan atau semua sekaligus)
+- Monitor sesi meja aktif dan riwayat sesi
+- Cancel / close sesi secara manual
 
-- Lihat session aktif
-- Terima pembayaran
-- Close session
-- Monitoring order
+**Pembayaran**
+- Manajemen metode pembayaran (nama, ikon, warna, kode, urutan tampil)
+- Aktifkan / nonaktifkan metode pembayaran secara dinamis
+- Upload gambar QRIS untuk self-payment pelanggan
 
----
+**Laporan**
+- Dashboard ringkasan: total pendapatan, sesi, dan pesanan hari ini
+- Laporan transaksi dengan filter rentang tanggal
 
-## Kitchen / Barista
-
-Fitur:
-
-- Lihat order masuk
-- Update status:
-    - Pending
-    - Processing
-    - Ready
-    - Completed
-
----
-
-# 3. Teknologi (LOCKED)
-
-Backend:
-
-- Laravel 12
-- PHP 8.3+
-- MySQL 8
-
-Frontend:
-
-- Blade
-- Bootstrap 5
-- SweetAlert2
-- DataTables
-- AlpineJS (opsional)
-
-Realtime:
-
-MVP:
-
-AJAX Polling
-
-Future:
-
-Laravel Reverb / WebSocket
-
-Deployment:
-
-Docker
-
-Container:
-
-- nginx
-- php-fpm
-- mysql
+**Pengaturan**
+- Profil toko (nama, alamat, telepon, email, logo)
+- Kelola user (tambah, edit, nonaktifkan)
 
 ---
 
-# 4. Konsep Bisnis (LOCKED)
+## Stack Teknologi
 
-Project menggunakan konsep:
-
-## Open Table (Default)
-
-Customer dapat:
-
-Pesan → Tambah Pesanan → Tambah Lagi → Bayar → Close
-
-Semua masuk ke satu sesi meja.
-
----
-
-## Instant Payment
-
-Customer:
-
-Pesan → Bayar → Session selesai
-
-Jika pesan lagi:
-
-Session baru dibuat.
+| Layer | Teknologi |
+|---|---|
+| Backend | Laravel 12, PHP 8.3+ |
+| Database | SQLite (dev) / MySQL 8 (prod) |
+| Frontend | Blade, Bootstrap 5.3 |
+| Realtime | AJAX Polling |
+| Notifikasi | SweetAlert2 |
+| QR Code | qrcode.js (client-side) |
+| Auth | Laravel Breeze |
 
 ---
 
-## Order Type
+## Arsitektur
 
-### Dine In
-
-Menggunakan meja.
+Monolith Laravel dengan Service Layer.
 
 ```
-order_type = dine_in
-table_id != null
-```
-
----
-
-### Takeaway
-
-Tanpa meja.
-
-```
-order_type = takeaway
-table_id = null
-```
-
-Rule:
-
-Takeaway selalu:
-
-```
-payment_mode = instant
-```
-
----
-
-## Payment Mode
-
-### Open Table
-
-Bayar di akhir.
-
----
-
-### Instant
-
-Bayar langsung.
-
----
-
-# 5. Workflow Sistem (LOCKED)
-
-Customer:
-
-```text
-Scan QR
-↓
-Session dibuat / lanjut
-↓
-Tambah menu
-↓
-Submit order
-↓
-Tambah lagi (opsional)
-↓
-Bayar sekarang / nanti
-↓
-Close session
-```
-
-Kitchen:
-
-```text
-Order baru
-↓
-Processing
-↓
-Ready
-↓
-Completed
-```
-
-Kasir:
-
-```text
-Lihat session aktif
-↓
-Terima pembayaran
-↓
-Close session
-```
-
----
-
-# 6. Arsitektur Aplikasi (LOCKED)
-
-Monolith Laravel.
-
-Tidak menggunakan microservice.
-
-Struktur:
-
-```text
-Frontend (Blade)
+Frontend (Blade + Bootstrap)
         │
-Controller
+    Controller
         │
-Service Layer
+   Service Layer
         │
-Model / Eloquent
+  Model / Eloquent
         │
-MySQL
+     Database
 ```
+
+Services:
+
+- `CartService` — manajemen keranjang per sesi browser
+- `OrderService` — buat order dari cart
+- `PaymentService` — proses pembayaran dan tutup sesi
+- `SessionService` — buat/kelola sesi meja
+- `ReportService` — agregasi data laporan
+- `ActivityLogService` — audit log aksi kunci
 
 ---
 
-Direktori utama:
+## Struktur Database
 
-```text
-app/
-├── Http/Controllers
-├── Services
-├── Models
-├── Policies
-├── Jobs
-└── Notifications
 ```
-
-Service layer digunakan untuk:
-
-- Create Order
-- Payment
-- Session
-- QR
-- Notification
-
----
-
-# 7. ERD (LOCKED)
-
-Relasi utama:
-
-```text
 shops
-│
+├── payment_methods
 ├── users
 ├── settings
 ├── categories
 │      └── menus
-│
-├── restaurant_tables
-│      └── table_sessions
-│              │
-│              ├── orders
-│              │      └── order_items
-│              │
-│              └── payments
-│
-└── activity_logs
+└── restaurant_tables
+       └── table_sessions
+               ├── orders
+               │      └── order_items   (order_type: dine_in | takeaway)
+               └── payments
+```
+
+**Tabel:**
+`shops`, `users`, `settings`, `categories`, `menus`, `restaurant_tables`, `table_sessions`, `orders`, `order_items`, `payments`, `payment_methods`, `activity_logs`
+
+---
+
+## Enum Status
+
+| Model | Status |
+|---|---|
+| `TableSession` | `open`, `payment_pending`, `paid`, `closed`, `cancelled` |
+| `Order` | `pending`, `processing`, `ready`, `completed`, `cancelled` |
+| `Payment` | `pending`, `paid`, `failed`, `refunded` |
+| `RestaurantTable` | `available`, `occupied`, `disabled` |
+
+---
+
+## Alur Sistem
+
+**Pelanggan (Open Table):**
+```
+Scan QR → Buka menu → Tambah ke cart → Set Dine In/Takeaway
+→ Checkout → Pantau status → Tambah lagi (opsional)
+→ Minta bayar → Kasir konfirmasi → Sesi tutup
+```
+
+**Pelanggan (Self-payment QRIS):**
+```
+Scan QR → Pesan → Bayar via QRIS mandiri → Sesi tutup otomatis
+```
+
+**Kitchen:**
+```
+Terima pesanan → Processing → Ready → Completed
+```
+
+**Kasir:**
+```
+Lihat sesi aktif → Tambah pesanan manual (opsional)
+→ Proses pembayaran → Close sesi
 ```
 
 ---
 
-# 8. Tabel Database (LOCKED)
+## Instalasi
 
-Tabel:
+```bash
+git clone https://github.com/your-org/tapserve.git
+cd tapserve
 
-1. shops
-2. users
-3. settings
-4. categories
-5. menus
-6. restaurant_tables
-7. table_sessions
-8. orders
-9. order_items
-10. payments
-11. activity_logs
+composer install
+npm install && npm run build
 
----
+cp .env.example .env
+php artisan key:generate
 
-# 9. Status Enum (LOCKED)
+# Sesuaikan DB_* di .env, lalu:
+php artisan migrate --seed
 
-## table_sessions
-
-```text
-open
-payment_pending
-paid
-closed
-cancelled
+php artisan serve
 ```
 
----
-
-## orders
-
-```text
-pending
-processing
-ready
-completed
-cancelled
-```
+Seed default membuat:
+- 1 toko contoh
+- User admin (`admin@example.com` / `password`)
+- Metode pembayaran: Tunai, QRIS, Transfer, E-Wallet
 
 ---
 
-## payments
+## Role Pengguna
 
-```text
-pending
-paid
-failed
-refunded
-```
-
----
-
-## restaurant_tables
-
-```text
-available
-occupied
-disabled
-```
+| Role | Akses |
+|---|---|
+| `admin` | Semua fitur admin + pengaturan |
+| `owner` | Sama dengan admin |
+| `cashier` | Dashboard kasir + proses pembayaran |
+| `kitchen` | Dashboard dapur + update status pesanan |
 
 ---
 
-# 10. Constraint Penting (LOCKED)
+## Belum Termasuk (Post-MVP)
 
-Rule:
-
-Takeaway:
-
-```text
-table_id = NULL
-payment_mode = instant
-```
-
----
-
-Dine In:
-
-```text
-table_id required
-```
+- Inventory & stock
+- Promo / voucher
+- Reservasi meja
+- Loyalty / membership
+- Cetak struk (printer)
+- Multi-cabang
+- WebSocket / Laravel Reverb
+- Docker deployment
 
 ---
 
-Session closed:
+## Status Project
 
-Tidak boleh tambah order.
+**MVP Selesai — Siap Digunakan**
 
----
-
-Payment success:
-
-Session auto close.
-
----
-
-# 11. Hal yang Sengaja Tidak Dibuat (MVP)
-
-Belum termasuk:
-
-- Inventory
-- Promo
-- Reservasi
-- Loyalty
-- Membership
-- Printer
-- Multi cabang
-- Supplier
-- Shift kasir
-- Stock opname
-
----
-
-# 12. Roadmap
-
-## Sprint 1
-
-Fondasi:
-
-- Auth
-- Role
-- CRUD menu
-- CRUD kategori
-- CRUD meja
-
----
-
-## Sprint 2
-
-Customer ordering:
-
-- QR
-- Menu publik
-- Cart
-- Checkout
-
----
-
-## Sprint 3
-
-Operational:
-
-- Session
-- Kitchen
-- Order status
-
----
-
-## Sprint 4
-
-Payment:
-
-- Cash
-- QRIS
-- Close session
-
----
-
-## Sprint 5
-
-Reporting:
-
-- Dashboard
-- Laporan
-
----
-
-## Sprint 6
-
-Scaling:
-
-- Multi tenant
-- Subscription
-- SaaS
-
----
-
-# 13. Coding Guideline
-
-Gunakan:
-
-- Service Layer
-- Form Request Validation
-- Eloquent Relationship
-- Resource Controller
-- Soft Delete jika diperlukan
-
-Hindari:
-
-- Query berat di Blade
-- Business logic di Controller
-- Hardcoded status string
-
-Gunakan constant/enum.
-
----
-
-# 14. Naming Convention
-
-Model:
-
-```text
-Shop
-Menu
-Order
-Payment
-TableSession
-RestaurantTable
-```
-
-Controller:
-
-```text
-OrderController
-MenuController
-KitchenController
-PaymentController
-```
-
-Service:
-
-```text
-OrderService
-PaymentService
-SessionService
-QRService
-```
-
----
-
-# 15. Current Status
-
-✅ Arsitektur dikunci  
-✅ Konsep bisnis dikunci  
-✅ Workflow dikunci  
-✅ ERD dikunci  
-
-Next:
-
-→ Migration Laravel  
-→ Model  
-→ Seeder  
-→ Authentication  
-→ CRUD dasar
-
----
-
-Project Status:
-
-MVP Planning Complete
+| Sprint | Deskripsi | Status |
+|---|---|---|
+| 1 | Auth, role, CRUD menu/kategori/meja, kelola user | ✅ Selesai |
+| 2 | QR code, menu publik, cart, checkout, takeaway | ✅ Selesai |
+| 3 | Sesi meja, dashboard kitchen, realtime status | ✅ Selesai |
+| 4 | Pembayaran kasir, QRIS self-pay, close sesi | ✅ Selesai |
+| 5 | Dashboard laporan, activity log, profil toko | ✅ Selesai |
+| + | Dine in/takeaway per item, pesanan manual kasir, manajemen metode pembayaran | ✅ Selesai |
+| 6 | Multi-tenant SaaS, WebSocket, Docker | ⬜ Roadmap |

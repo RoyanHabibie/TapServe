@@ -22,13 +22,29 @@
         </div>
         <div class="card-body p-0">
             @foreach ($cart as $item)
+                @php $ot = $item['order_type'] ?? 'dine_in'; @endphp
                 <div class="d-flex justify-content-between align-items-center px-4 py-3"
                     style="border-bottom:1px solid #f8fafc;">
                     <div>
                         <div class="fw-600" style="font-weight:600;font-size:.9rem;">{{ $item['name'] }}</div>
-                        <div class="text-muted small">
-                            {{ $item['quantity'] }} ×
-                            Rp {{ number_format($item['price'], 0, ',', '.') }}
+                        <div class="d-flex align-items-center gap-2 mt-1">
+                            <span class="text-muted small">
+                                {{ $item['quantity'] }} ×
+                                Rp {{ number_format($item['price'], 0, ',', '.') }}
+                            </span>
+                            @if ($ot === 'takeaway')
+                                <span style="font-size:.7rem;font-weight:600;padding:.1rem .5rem;
+                                             border-radius:6px;background:#fffbeb;color:#92400e;
+                                             border:1px solid #fcd34d;">
+                                    <i class="bi bi-bag" style="font-size:.65rem;"></i> Bawa Pulang
+                                </span>
+                            @else
+                                <span style="font-size:.7rem;font-weight:600;padding:.1rem .5rem;
+                                             border-radius:6px;background:#eff6ff;color:#1d4ed8;
+                                             border:1px solid #bfdbfe;">
+                                    <i class="bi bi-shop" style="font-size:.65rem;"></i> Dine In
+                                </span>
+                            @endif
                         </div>
                     </div>
                     <span class="price-tag fw-700" style="font-size:.9rem;">

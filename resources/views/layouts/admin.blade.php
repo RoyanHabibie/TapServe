@@ -207,6 +207,14 @@
                 </a>
 
                 <div class="sb-section-label mt-2">Pengaturan</div>
+                <a href="{{ route('admin.settings.shop') }}"
+                    class="sb-nav-link {{ request()->routeIs('admin.settings.shop*') ? 'active' : '' }}">
+                    <i class="bi bi-shop"></i> Profil Toko
+                </a>
+                <a href="{{ route('admin.payment-methods.index') }}"
+                    class="sb-nav-link {{ request()->routeIs('admin.payment-methods.*') ? 'active' : '' }}">
+                    <i class="bi bi-credit-card-2-front"></i> Metode Pembayaran
+                </a>
                 <a href="{{ route('admin.users.index') }}"
                     class="sb-nav-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}">
                     <i class="bi bi-people"></i> Kelola User

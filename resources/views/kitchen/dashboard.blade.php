@@ -44,6 +44,33 @@
         return map[status] || status.charAt(0).toUpperCase() + status.slice(1);
     }
 
+    function buildTypeBadge(type) {
+        if (type === 'takeaway') {
+            return '<span style="font-size:.7rem;font-weight:600;padding:.15rem .5rem;border-radius:6px;' +
+                   'background:#fffbeb;color:#92400e;border:1px solid #fcd34d;white-space:nowrap;">' +
+                   '<i class="bi bi-bag" style="font-size:.65rem;"></i> Bawa Pulang</span>';
+        }
+        if (type === 'mixed') {
+            return '<span style="font-size:.7rem;font-weight:600;padding:.15rem .5rem;border-radius:6px;' +
+                   'background:#f5f3ff;color:#6d28d9;border:1px solid #c4b5fd;white-space:nowrap;">' +
+                   '<i class="bi bi-shuffle" style="font-size:.65rem;"></i> Campuran</span>';
+        }
+        return '<span style="font-size:.7rem;font-weight:600;padding:.15rem .5rem;border-radius:6px;' +
+               'background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;white-space:nowrap;">' +
+               '<i class="bi bi-shop" style="font-size:.65rem;"></i> Dine In</span>';
+    }
+
+    function buildItemTypePill(type) {
+        if (type === 'takeaway') {
+            return '<span style="font-size:.68rem;font-weight:600;padding:.12rem .45rem;border-radius:5px;' +
+                   'background:#fffbeb;color:#92400e;border:1px solid #fcd34d;flex-shrink:0;white-space:nowrap;">' +
+                   '<i class="bi bi-bag me-1" style="font-size:.6rem;"></i>Bawa Pulang</span>';
+        }
+        return '<span style="font-size:.68rem;font-weight:600;padding:.12rem .45rem;border-radius:5px;' +
+               'background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;flex-shrink:0;white-space:nowrap;">' +
+               '<i class="bi bi-shop me-1" style="font-size:.6rem;"></i>Dine In</span>';
+    }
+
     function loadKitchenOrders() {
         $.get('/kitchen/orders-ajax', function (orders) {
             var html = '';
@@ -56,7 +83,9 @@
                 orders.forEach(function (order) {
                     var s = buildStatusStyle(order.status);
                     var label = buildLabel(order.status);
+                    var typeBadge = buildTypeBadge(order.type_summary);
                     var buttons = '';
+
                     if (order.status === 'pending') {
                         buttons = `
                             <button class="btn btn-sm update-status flex-grow-1"
@@ -87,27 +116,36 @@
                     }
 
                     var itemsHtml = order.items.map(function (item) {
+                        var pill = buildItemTypePill(item.order_type);
                         return `<div class="d-flex justify-content-between align-items-center py-2"
                                     style="border-bottom:1px solid #f8fafc;">
-                                    <span style="font-size:.85rem;font-weight:500;">${item.name}
-                                        <span class="text-muted" style="font-weight:400;">×${item.quantity}</span>
-                                    </span>
-                                    ${item.notes ? '<span class="badge" style="background:#f1f5f9;color:#64748b;font-weight:400;font-size:.72rem;">' + item.notes + '</span>' : ''}
+                                    <div class="d-flex align-items-center gap-2 flex-grow-1 me-2">
+                                        ${pill}
+                                        <span style="font-size:.85rem;font-weight:500;">${item.name}
+                                            <span class="text-muted" style="font-weight:400;">×${item.quantity}</span>
+                                        </span>
+                                    </div>
+                                    ${item.notes ? '<span class="badge" style="background:#f1f5f9;color:#64748b;font-weight:400;font-size:.72rem;flex-shrink:0;">' + item.notes + '</span>' : ''}
                                 </div>`;
                     }).join('');
 
                     html += `
                         <div class="col-12 col-md-6 col-xl-4" id="order-${order.id}">
                             <div class="card h-100" style="border-top:3px solid ${s.border};">
-                                <div class="card-header bg-white d-flex justify-content-between align-items-center py-3 px-4">
-                                    <div>
-                                        <div class="fw-600" style="font-weight:600;font-size:.875rem;">#${order.order_number}</div>
-                                        <div class="text-muted" style="font-size:.75rem;">${order.table}</div>
+                                <div class="card-header bg-white py-3 px-4">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div>
+                                            <div class="fw-600" style="font-weight:600;font-size:.875rem;">#${order.order_number}</div>
+                                            <div class="text-muted" style="font-size:.75rem;">${order.table}</div>
+                                        </div>
+                                        <div class="d-flex flex-column align-items-end gap-1">
+                                            <span class="badge rounded-pill px-3"
+                                                style="background:${s.bg};color:${s.color};font-size:.75rem;">
+                                                ${label}
+                                            </span>
+                                            ${typeBadge}
+                                        </div>
                                     </div>
-                                    <span class="badge rounded-pill px-3"
-                                        style="background:${s.bg};color:${s.color};font-size:.75rem;">
-                                        ${label}
-                                    </span>
                                 </div>
                                 <div class="card-body px-4 py-2">
                                     ${itemsHtml}

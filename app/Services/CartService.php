@@ -19,11 +19,10 @@ class CartService
         return $this->session->get('cart', []);
     }
 
-    public function addItem(int $menuId, int $quantity = 1, ?string $notes = null)
+    public function addItem(int $menuId, int $quantity = 1, ?string $notes = null, string $orderType = 'dine_in')
     {
         $cart = $this->getCart();
 
-        // Cek jika sudah ada, tambah quantity
         if (isset($cart[$menuId])) {
             $cart[$menuId]['quantity'] += $quantity;
             if ($notes) {
@@ -32,11 +31,12 @@ class CartService
         } else {
             $menu = Menu::findOrFail($menuId);
             $cart[$menuId] = [
-                'menu_id' => $menuId,
-                'name' => $menu->name,
-                'price' => $menu->price,
-                'quantity' => $quantity,
-                'notes' => $notes,
+                'menu_id'    => $menuId,
+                'name'       => $menu->name,
+                'price'      => $menu->price,
+                'quantity'   => $quantity,
+                'notes'      => $notes,
+                'order_type' => $orderType,
             ];
         }
 
@@ -54,6 +54,24 @@ class CartService
             }
             $this->session->put('cart', $cart);
         }
+    }
+
+    public function updateItemOrderType(int $menuId, string $orderType)
+    {
+        $cart = $this->getCart();
+        if (isset($cart[$menuId])) {
+            $cart[$menuId]['order_type'] = $orderType;
+            $this->session->put('cart', $cart);
+        }
+    }
+
+    public function updateAllOrderType(string $orderType)
+    {
+        $cart = $this->getCart();
+        foreach ($cart as $menuId => $item) {
+            $cart[$menuId]['order_type'] = $orderType;
+        }
+        $this->session->put('cart', $cart);
     }
 
     public function removeItem(int $menuId)

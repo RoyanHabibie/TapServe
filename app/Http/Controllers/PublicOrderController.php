@@ -195,6 +195,26 @@ class PublicOrderController extends Controller
     }
 
     /**
+     * Update order_type satu item atau semua item di keranjang (AJAX).
+     */
+    public function updateCartItemType(Request $request, ?string $token = null)
+    {
+        $request->validate([
+            'order_type' => 'required|in:dine_in,takeaway',
+            'menu_id'    => 'nullable|integer',
+            'all'        => 'nullable|boolean',
+        ]);
+
+        if ($request->boolean('all')) {
+            $this->cartService->updateAllOrderType($request->order_type);
+        } else {
+            $this->cartService->updateItemOrderType((int) $request->menu_id, $request->order_type);
+        }
+
+        return response()->json(['success' => true]);
+    }
+
+    /**
      * Tampilkan halaman konfirmasi checkout (opsional langsung place order).
      */
     public function checkout(?string $token = null)

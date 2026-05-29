@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Enums\OrderStatus;
 use App\Enums\SessionStatus;
+use App\Models\Menu;
 use App\Models\TableSession;
 
 class CashierController extends Controller
@@ -17,7 +18,8 @@ class CashierController extends Controller
 
         $sessions = TableSession::with([
             'orders' => function ($q) {
-                $q->whereNotIn('status', [OrderStatus::Cancelled->value]);
+                $q->whereNotIn('status', [OrderStatus::Cancelled->value])
+                  ->with('orderItems.menu');
             },
             'table'
         ])
@@ -26,6 +28,19 @@ class CashierController extends Controller
             ->latest()
             ->get();
 
-        return view('cashier.dashboard', compact('sessions'));
+        $menus = Menu::where('shop_id', $shopId)
+            ->where('is_available', true)
+            ->with('category:id,name')
+            ->orderBy('category_id')
+            ->orderBy('name')
+            ->get(['id', 'category_id', 'name', 'price'])
+            ->map(fn($m) => [
+                'id'       => $m->id,
+                'name'     => $m->name,
+                'price'    => (float) $m->price,
+                'category' => $m->category->name ?? 'Lainnya',
+            ]);
+
+        return view('cashier.dashboard', compact('sessions', 'menus'));
     }
 }
